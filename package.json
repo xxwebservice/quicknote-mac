@@ -1,0 +1,32 @@
+{
+  "name": "quicknote-mac",
+  "version": "1.5.0",
+  "description": "QuickNote — 会议笔记 + 录音 (macOS)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --mac --dir",
+    "dist": "electron-builder --mac"
+  },
+  "build": {
+    "appId": "com.quicknote.mac",
+    "productName": "QuickNote",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ],
+      "entitlements": "entitlements.plist",
+      "entitlementsInherit": "entitlements.plist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "www/**/*"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}
