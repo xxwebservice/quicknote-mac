@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>QuickNote</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Drag region for frameless titlebar -->
+    <div id="drag-region"></div>
+
+    <header id="header">
+      <div class="header-left">
+        <span class="app-title">QuickNote</span>
+        <span id="status-dot" class="status-dot hidden"></span>
+      </div>
+      <div class="header-right">
+        <span id="timer" class="timer hidden">00:00</span>
+        <button id="stop-btn" class="stop-header-btn hidden">完成</button>
+        <button id="menu-btn" class="icon-btn" aria-label="Menu">⋮</button>
+      </div>
+    </header>
+
+    <div id="menu-dropdown" class="menu-dropdown hidden">
+      <button id="menu-export"   class="menu-item">导出笔记</button>
+      <button id="menu-history"  class="menu-item">历史记录</button>
+      <button id="menu-exports"  class="menu-item">已导出文件</button>
+      <button id="menu-settings" class="menu-item">设置</button>
+    </div>
+
+    <main id="main-content">
+
+      <!-- Start -->
+      <div id="start-screen" class="screen active">
+        <div class="start-container">
+          <input type="text" id="meeting-title" class="meeting-title-input" placeholder="会议主题（可选）" autocomplete="off">
+          <button id="start-btn" class="start-btn">开始记录</button>
+          <p class="hint-text">点击开始后可同时录音和记笔记</p>
+        </div>
+        <div id="recent-sessions" class="recent-sessions">
+          <h3 class="section-title">最近记录</h3>
+          <div id="session-list" class="session-list"></div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div id="notes-screen" class="screen">
+        <div id="title-bar" class="title-bar">
+          <span id="current-title" class="current-title"></span>
+        </div>
+        <div id="notes-container" class="notes-container">
+          <div id="notes-entries" class="notes-entries">
+            <div id="empty-hint" class="empty-hint">输入笔记要点，按发送或回车提交...</div>
+          </div>
+          <div class="input-row">
+            <div class="input-group">
+              <textarea id="note-input" class="note-input" placeholder="记一条笔记..." rows="3"></textarea>
+              <button id="send-btn" class="send-btn" disabled>↑</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Review -->
+      <div id="review-screen" class="screen">
+        <div class="review-container">
+          <h2 id="review-title" class="review-title"></h2>
+          <div class="review-meta">
+            <span id="review-duration"></span>
+            <span id="review-count"></span>
+          </div>
+          <div id="review-notes" class="review-notes"></div>
+          <div class="review-actions">
+            <button id="export-btn" class="action-btn primary">导出 ZIP</button>
+            <button id="share-btn"  class="action-btn share">在 Finder 中显示</button>
+          </div>
+          <div class="review-actions hidden" id="transcribe-action-row" style="margin-top:10px">
+            <button id="transcribe-entry-btn" class="action-btn transcribe-btn">本地转录</button>
+          </div>
+          <div class="review-actions" style="margin-top:10px">
+            <button id="new-btn" class="action-btn">新建记录</button>
+          </div>
+          <p class="export-hint">ZIP包含录音 + 笔记 + Claude指引</p>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div id="history-screen" class="screen">
+        <div class="list-screen-header">
+          <button id="back-btn" class="icon-btn">←</button>
+          <h2>历史记录</h2>
+        </div>
+        <div class="list-screen-body">
+          <div id="history-list" class="session-list"></div>
+        </div>
+      </div>
+
+      <!-- Exports -->
+      <div id="exports-screen" class="screen">
+        <div class="list-screen-header">
+          <button id="back-from-exports" class="icon-btn">←</button>
+          <h2>已导出文件</h2>
+        </div>
+        <div class="list-screen-body">
+          <div id="exports-list"></div>
+        </div>
+      </div>
+
+      <!-- Settings (stub for Mac — no Whisper) -->
+      <div id="settings-screen" class="screen">
+        <div class="list-screen-header">
+          <button id="back-from-settings" class="icon-btn">←</button>
+          <h2>设置</h2>
+        </div>
+        <div class="list-screen-body">
+          <div id="settings-model-list" style="margin-top:12px">
+            <p class="settings-hint">macOS 版暂不支持本地转录。<br>录音文件可导出后使用外部工具转录。</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transcription (stub) -->
+      <div id="transcription-screen" class="screen">
+        <div class="list-screen-header">
+          <button id="back-from-transcription" class="icon-btn">←</button>
+          <h2>本地转录</h2>
+        </div>
+        <div class="list-screen-body">
+          <div id="transcription-no-model" class="transcription-no-model hidden"><p>macOS 版暂不支持本地转录。</p></div>
+          <div id="transcription-has-model" style="display:none">
+            <select id="transcription-model-select" class="whisper-lang-select"></select>
+            <select id="whisper-lang-select" class="whisper-lang-select"><option value="">自动检测</option></select>
+            <div id="diarize-toggle-row" class="toggle-row hidden"><input type="checkbox" id="diarize-toggle" class="toggle-checkbox"></div>
+            <button id="transcribe-btn" class="action-btn primary" style="display:none">开始转录</button>
+            <button id="cancel-transcribe-btn" class="action-btn" style="display:none">取消</button>
+          </div>
+          <div id="transcription-progress-wrap" class="progress-wrap hidden">
+            <div class="progress-bar-track"><div id="transcription-progress-bar" class="progress-bar-fill"></div></div>
+            <div id="transcription-status" class="transcription-status"></div>
+          </div>
+          <div id="transcription-result" class="transcription-result hidden">
+            <div class="result-header-row">
+              <span class="section-title">转录结果</span>
+              <button id="copy-transcript-btn" class="copy-btn">复制</button>
+            </div>
+            <div id="transcript-text" class="transcript-text"></div>
+            <div class="merge-action-row">
+              <button id="merge-notes-btn" class="action-btn merge-btn">融合笔记</button>
+              <button id="share-merged-btn" class="action-btn merge-share-btn hidden">在 Finder 中显示</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
